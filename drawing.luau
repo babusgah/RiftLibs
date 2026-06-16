@@ -8,12 +8,27 @@ local Fonts = {
     [3] = Enum.Font.RobotoMono
 }
 
+local function getDrawingParent()
+    local ok, players = pcall(function()
+        return game:GetService("Players")
+    end)
+    if ok and players and players.LocalPlayer then
+        local ok2, pg = pcall(function()
+            return players.LocalPlayer:WaitForChild("PlayerGui", 5)
+        end)
+        if ok2 and pg then
+            return pg
+        end
+    end
+    return gethui()
+end
+
 local UI = Instance.new("ScreenGui")
 UI.Name = "DrawingLib"
 UI.DisplayOrder = 999999
 UI.IgnoreGuiInset = true
 UI.ResetOnSpawn = false
-UI.Parent = gethui()
+UI.Parent = getDrawingParent()
 
 local Drawing = {
     Fonts = {
