@@ -8,14 +8,6 @@ local Fonts = {
     [3] = Enum.Font.RobotoMono
 }
 
-local function gethui()
-    local success, result = pcall(function()
-        return game:GetService("CoreGui")
-    end)
-    return success and result or game:GetService("Players").LocalPlayer:FindFirstChildOfClass("PlayerGui")
-end
-getgenv().gethui = gethui
-
 local UI = Instance.new("ScreenGui")
 UI.Name = "DrawingLib"
 UI.DisplayOrder = 999999
