@@ -1,110 +1,110 @@
 local bit32 = bit32 or bit or {}
 
-if not bit32.band then
-    bit32.band = function(a, b)
+local function trim32(n)
+    return n % 4294967296
+end
+
+local function tosigned(n)
+    n = trim32(n)
+    if n >= 2147483648 then
+        n = n - 4294967296
+    end
+    return n
+end
+
+local function isnum(v)
+    return type(v) == "number" and v == v
+end
+
+if not bit32.badd then
+    bit32.badd = function(...)
         local result = 0
-        local bitval = 1
-        while a > 0 and b > 0 do
-            if a % 2 == 1 and b % 2 == 1 then
-                result = result + bitval
+        for _, v in ipairs({...}) do
+            if isnum(v) then result = trim32(result + v) end
+        end
+        return result
+    end
+end
+
+if not bit32.bsub then
+    bit32.bsub = function(...)
+        local result = nil
+        for _, v in ipairs({...}) do
+            if isnum(v) then
+                if result == nil then result = trim32(v)
+                else result = trim32(result - v) end
             end
-            bitval = bitval * 2
-            a = math.floor(a / 2)
-            b = math.floor(b / 2)
+        end
+        return result or 0
+    end
+end
+
+if not bit32.bmul then
+    bit32.bmul = function(...)
+        local result = 1
+        for _, v in ipairs({...}) do
+            if isnum(v) then result = trim32(result * v) end
         end
         return result
     end
 end
 
-if not bit32.bor then
-    bit32.bor = function(a, b)
-        local result = 0
-        local bitval = 1
-        while a > 0 or b > 0 do
-            if a % 2 == 1 or b % 2 == 1 then
-                result = result + bitval
+if not bit32.bdiv then
+    bit32.bdiv = function(...)
+        local result = nil
+        for _, v in ipairs({...}) do
+            if isnum(v) then
+                if result == nil then result = trim32(v)
+                elseif v ~= 0 then result = trim32(math.floor(result / v)) end
             end
-            bitval = bitval * 2
-            a = math.floor(a / 2)
-            b = math.floor(b / 2)
         end
-        return result
+        return result or 0
     end
 end
 
-if not bit32.bxor then
-    bit32.bxor = function(a, b)
-        local result = 0
-        local bitval = 1
-        while a > 0 or b > 0 do
-            if (a % 2) ~= (b % 2) then
-                result = result + bitval
-            end
-            bitval = bitval * 2
-            a = math.floor(a / 2)
-            b = math.floor(b / 2)
-        end
-        return result
-    end
-end
-
-if not bit32.bnot then
-    bit32.bnot = function(n)
-        return (-1) - n
-    end
-end
-
-if not bit32.lshift then
-    bit32.lshift = function(a, b)
-        return a * (2 ^ b)
-    end
-end
-
-if not bit32.rshift then
-    bit32.rshift = function(a, b)
-        return math.floor(a / (2 ^ b))
-    end
-end
-
-if not bit32.arshift then
-    bit32.arshift = function(a, b)
-        local result = math.floor(a / (2 ^ b))
-        if a < 0 and b > 0 then
-            result = result + (2 ^ (32 - b)) - 1
-        end
-        return result
-    end
-end
-
-if not bit32.lrotate then
-    bit32.lrotate = function(a, b)
-        b = b % 32
-        return bit32.bor(bit32.lshift(a, b), bit32.rshift(a, 32 - b))
-    end
-end
-
-if not bit32.rrotate then
-    bit32.rrotate = function(a, b)
-        b = b % 32
-        return bit32.bor(bit32.rshift(a, b), bit32.lshift(a, 32 - b))
-    end
-end
-
-if not bit32.extract then
-    bit32.extract = function(n, field, width)
-        width = width or 1
-        return bit32.band(bit32.rshift(n, field), (2 ^ width) - 1)
-    end
-end
-
-if not bit32.replace then
-    bit32.replace = function(n, v, field, width)
-        width = width or 1
-        local mask = (2 ^ width) - 1
-        return bit32.bor(
-            bit32.band(n, bit32.bnot(bit32.lshift(mask, field))),
-            bit32.lshift(bit32.band(v, mask), field)
+if not bit32.bswap then
+    bit32.bswap = bit32.byteswap or function(n)
+        n = trim32(n)
+        return trim32(
+            (n % 256) * 16777216 +
+            math.floor(n / 256) % 256 * 65536 +
+            math.floor(n / 65536) % 256 * 256 +
+            math.floor(n / 16777216)
         )
+    end
+end
+
+if not bit32.ror then
+    bit32.ror = bit32.rrotate or function(a, b)
+        b = b % 32
+        if b == 0 then return trim32(a) end
+        a = trim32(a)
+        local shifted = a % (2 ^ b)
+        local rest = math.floor(a / (2 ^ b))
+        return trim32(shifted * (2 ^ (32 - b)) + rest)
+    end
+end
+
+if not bit32.rol then
+    bit32.rol = bit32.lrotate or function(a, b)
+        b = b % 32
+        if b == 0 then return trim32(a) end
+        a = trim32(a)
+        local shifted = math.floor(a / (2 ^ (32 - b)))
+        local rest = a % (2 ^ (32 - b))
+        return trim32(rest * (2 ^ b) + shifted)
+    end
+end
+
+if not bit32.tohex then
+    bit32.tohex = function(n)
+        return string.format("%x", trim32(n))
+    end
+end
+
+if not bit32.tobit then
+    bit32.tobit = function(n)
+        return tosigned(n)
     end
 end
 
